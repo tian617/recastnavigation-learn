@@ -996,6 +996,8 @@ bool rcBuildDistanceField(rcContext* ctx, rcCompactHeightfield& chf)
 	ctx->startTimer(RC_TIMER_BUILD_DISTANCEFIELD_BLUR);
 	
 	// Blur
+	//再用boxblur来做一次模糊处理（即把span实际的dist修改为周围九宫格内的span的dist的平均值），使得span的距离值比较平滑
+	//跟纹理的二次采样类似原理
 	if (boxBlur(chf, 1, src, dst) != src)
 		rcSwap(src, dst);
 	

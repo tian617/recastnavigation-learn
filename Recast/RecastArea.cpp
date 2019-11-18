@@ -57,7 +57,7 @@ bool rcErodeWalkableArea(rcContext* ctx, int radius, rcCompactHeightfield& chf)
     // 先假设所有物体都不邻接这障碍，把距离初始化为“无穷远”
 	memset(dist, 0xff, sizeof(unsigned char)*chf.spanCount);
 	
-    //标记单元格
+    //标记单元格,dist = 0 则本身是障碍，或者在障碍临近一格
 	// Mark boundary cells.
 	for (int y = 0; y < h; ++y)
 	{
@@ -71,18 +71,18 @@ bool rcErodeWalkableArea(rcContext* ctx, int radius, rcCompactHeightfield& chf)
 				{
 					dist[i] = 0; // 该点本身就是障碍，距离必然是0
 				}
-				else
+				else  //本身可以走
 				{
                     //rcCompactSpan：一段可通行的区间
 					const rcCompactSpan& s = chf.spans[i];
 					int nc = 0;
 					for (int dir = 0; dir < 4; ++dir)//遍历四个邻接span
 					{
-						if (rcGetCon(s, dir) != RC_NOT_CONNECTED)//有邻居
+						if (rcGetCon(s, dir) != RC_NOT_CONNECTED)//有邻居, RC_NOT_CONNECTED是设置的初始值
 						{
 							const int nx = x + rcGetDirOffsetX(dir);
 							const int ny = y + rcGetDirOffsetY(dir);
-							const int nidx = (int)chf.cells[nx+ny*w].index + rcGetCon(s, dir);//邻居的索引
+							const int nidx = (int)chf.cells[nx+ny*w].index + rcGetCon(s, dir);//邻居的索引 n缩写neighbour
 							if (chf.areas[nidx] != RC_NULL_AREA)//邻居可以通行
 							{
 								nc++;
@@ -90,7 +90,7 @@ bool rcErodeWalkableArea(rcContext* ctx, int radius, rcCompactHeightfield& chf)
 						}
 					}
 
-                    //至少缺一个邻接，说明旁边存在障碍物，那么距离障碍物距离就是0.
+                    //至少缺一个邻接，说明旁边存在障碍物，那么距离障碍物距离就是0.  妙!
 					// At least one missing neighbour.
 					if (nc != 4)
 						dist[i] = 0;
@@ -113,7 +113,7 @@ bool rcErodeWalkableArea(rcContext* ctx, int radius, rcCompactHeightfield& chf)
 				const rcCompactSpan& s = chf.spans[i];
 				
                 //0左 1下 2右 3上
-				if (rcGetCon(s, 0) != RC_NOT_CONNECTED)//有邻居
+				if (rcGetCon(s, 0) != RC_NOT_CONNECTED)//能连通邻居
 				{
                     //左
 					// (-1,0)
@@ -121,8 +121,10 @@ bool rcErodeWalkableArea(rcContext* ctx, int radius, rcCompactHeightfield& chf)
 					const int ay = y + rcGetDirOffsetY(0);
 					const int ai = (int)chf.cells[ax+ay*w].index + rcGetCon(s, 0);
 					const rcCompactSpan& as = chf.spans[ai];
+
                     // 距离放大两倍，方便斜方向上距离存贮。
 					nd = (unsigned char)rcMin((int)dist[ai]+2, 255);
+					//nd 距离邻居的距离
 					if (nd < dist[i])
 						dist[i] = nd;
 					

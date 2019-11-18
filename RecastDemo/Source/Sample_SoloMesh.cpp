@@ -502,7 +502,7 @@ bool Sample_SoloMesh::handleBuild()
 	}
 		
 	// Erode the walkable area by agent radius.
-    // 根据人物的半径，收紧可走区域。
+    // 根据人物的半径，收紧可走区域。 
 	if (!rcErodeWalkableArea(m_ctx, m_cfg.walkableRadius, *m_chf))
 	{
 		m_ctx->log(RC_LOG_ERROR, "buildNavigation: Could not erode.");
@@ -530,6 +530,7 @@ bool Sample_SoloMesh::handleBuild()
 	else
 	{
 		// Prepare for region partitioning, by calculating distance field along the walkable surface.
+		//计算距离场，跟rcErodeWalkableArea处理差不多
 		if (!rcBuildDistanceField(m_ctx, *m_chf))
 		{
 			m_ctx->log(RC_LOG_ERROR, "buildNavigation: Could not build distance field.");
